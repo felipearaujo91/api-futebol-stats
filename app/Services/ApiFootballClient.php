@@ -13,7 +13,7 @@ class ApiFootballClient
         $this->baseUrl = config('services.api_football.base_url');
     }
 
-    protected function request(string $endpoint, array $params = [])
+    public function request(string $endpoint, array $params = [])
     {
         return Http::baseUrl($this->baseUrl)
             ->withHeaders([

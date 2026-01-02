@@ -26,8 +26,8 @@ class DadosBotController extends Controller
      */
     public function index(): JsonResponse
     {
-        // ⚠️ por enquanto IDs fixos
-        $fixtureId = 1234;
+        
+        $fixtureId = 1386839;
         $timeCasaId = 33;
         $timeForaId = 48;
 
