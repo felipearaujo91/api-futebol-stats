@@ -41,7 +41,10 @@ class MetadadosService
             clima_previsto: $fixture['fixture']['weather']['description'] ?? null,
 
             // precisa definir como vai ficar
-            importancia_jogo: null
+            importancia_jogo: null,
+
+            timeCasaId: $fixture['teams']['home']['id'],
+            timeForaId: $fixture['teams']['away']['id'],
         );
     }
 }

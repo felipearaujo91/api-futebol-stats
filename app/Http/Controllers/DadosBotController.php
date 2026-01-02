@@ -28,11 +28,12 @@ class DadosBotController extends Controller
     {
         
         $fixtureId = 1386839;
-        $timeCasaId = 33;
-        $timeForaId = 48;
+        $metadados = $this->metadadosService->get($fixtureId);
+        $timeCasaId = $metadados->timeCasaId;
+        $timeForaId = $metadados->timeForaId;
 
         $response = [
-            'metadados' => $this->metadadosService->get($fixtureId),
+            'metadados' => $metadados,
             'odds_atuais' => $this->oddsService->get($fixtureId),
             'arbitragem' => $this->arbitragemService->get($fixtureId),
             'historico_h2h' => $this->historicoH2HService->get($timeCasaId, $timeForaId),
