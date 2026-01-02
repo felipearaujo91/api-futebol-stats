@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\TimeController;
+use App\Http\Controllers\DadosBotController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,3 +22,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/times/{teamId}', [TimeController::class, 'show']);
+
+Route::get('/dados-bot', [DadosBotController::class, 'index']);
