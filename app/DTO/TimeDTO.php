@@ -7,7 +7,7 @@ class TimeDTO
     public function __construct(
         public string $nome,
         public int $posicao_tabela,
-        public array $forma_recente,
+        public ?array $forma_recente_geral,
         public array $ultimos_jogos,
         public EstatisticasTimeDTO $stats_season,
         public array $noticias_e_desfalques,
@@ -19,7 +19,7 @@ class TimeDTO
         return [
             'nome' => $this->nome,
             'posicao_tabela' => $this->posicao_tabela,
-            'forma_recente' => $this->forma_recente,
+            'forma_recente_geral' => $this->forma_recente_geral,
             'ultimos_jogos_casa' => $this->ultimos_jogos,
             'stats_season' => $this->stats_season->toArray(),
             'noticias_e_desfalques' => array_map(fn ($d) => $d->toArray(), $this->noticias_e_desfalques),
@@ -32,7 +32,7 @@ class TimeDTO
         return [
             'nome' => $this->nome,
             'posicao_tabela' => $this->posicao_tabela,
-            'forma_recente' => $this->forma_recente,
+            'forma_recente_geral' => $this->forma_recente_geral,
             'ultimos_jogos_fora' => $this->ultimos_jogos,
             'stats_season' => $this->stats_season->toArray(),
             'noticias_e_desfalques' => array_map(fn ($d) => $d->toArray(), $this->noticias_e_desfalques),

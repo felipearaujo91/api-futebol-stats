@@ -11,7 +11,10 @@ class MetadadosDTO
         public string $estadio,
         public ?string $clima_previsto,
         public ?string $importancia_jogo,
-        public int $timeCasaId,     
-        public int $timeForaId    
+        public int $timeCasaId,    
+        public string $timeCasaNome, 
+        public int $timeForaId,
+        public string $timeForaNome,
+        public int $ligaId
     ) {}
 }

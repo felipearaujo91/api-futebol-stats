@@ -6,127 +6,149 @@ use App\DTO\TimeDTO;
 use App\DTO\EstatisticasTimeDTO;
 use App\DTO\DesfalqueDTO;
 
-class TimeService
+class TimeService extends ApiFootballClient
 {
-    public function getCasa(): array
+
+    public int $ligaId;
+    public int $temporadaAno;
+    public string $timeCasaNome;
+    public string $timeForaNome;
+    public int $fixtureId;
+
+    /**
+     * Busca dados do time da casa
+     */
+    public function getCasa(int $timeId): array
     {
-        $dto = new TimeDTO(
-            nome: 'Manchester United',
-            posicao_tabela: 9,
-            forma_recente: ['V', 'E', 'E', 'D', 'V'],
-            ultimos_jogos: ['V (4-2)', 'V (2-0)'],
-            stats_season: new EstatisticasTimeDTO(
-                13, 6, 3, 4,
-                21, 20,
-                1.61, 1.53,
-                4.2,
-                12.4,
-                10.2,
-                2.4,
-                52.5
-            ),
-            noticias_e_desfalques: [
-                new DesfalqueDTO(
-                    noticia_ou_desfalque: 'desfalque',
-                    atleta: 'Harry Maguire',
-                    posicao: 'Zagueiro',
-                    motivo: 'Lesão',
-                    Partidas: 14,
-                    partidas_titular: 13,
-                    total_minutos_jogados: 1161,
-                    nota_media: 7.08,
-                    gols_sofridos_por_jogo: null,
-                    gols: 1,
-                    gols_esperados: 0.35,
-                    assistencias: 0,
-                    cartoes_amarelo: 3,
-                    cartoes_vermelho: 0,
-                    jogos_sem_sofrer_gol: null
-                ),
-                
-                new DesfalqueDTO(
-                    noticia_ou_desfalque: 'desfalque',
-                    atleta: 'Lucas Paquetá',
-                    posicao: 'Meio campista',
-                    motivo: 'Suspensão',
-                    Partidas: 12,
-                    partidas_titular: 12,
-                    total_minutos_jogados: 1044,
-                    nota_media: 7.08,
-                    gols_sofridos_por_jogo: null,
-                    gols: 3,
-                    gols_esperados: 1.85,
-                    assistencias: 0,
-                    cartoes_amarelo: 5,
-                    cartoes_vermelho: 1,
-                    jogos_sem_sofrer_gol: null
-                ),
-
-                new DesfalqueDTO(
-                    noticia_ou_desfalque: 'desfalque',
-                    atleta: 'Crysencio Summerville',
-                    posicao: 'Extremo',
-                    motivo: 'Lesão',
-                    Partidas: 9,
-                    partidas_titular: 8,
-                    total_minutos_jogados: 645,
-                    nota_media: 6.8,
-                    gols_sofridos_por_jogo: null,
-                    gols: 0,
-                    gols_esperados: 0.91,
-                    assistencias: 1,
-                    cartoes_amarelo: 3,
-                    cartoes_vermelho: 0,
-                    jogos_sem_sofrer_gol: null
-                )
-
-
-            ],
-            fator_motivacional: 'Busca vaga em competição europeia'
-        );
-
-        return $dto->toArrayCasa();
+        return $this->buildTime($timeId, 'casa');
     }
 
-    public function getFora(): array
+    /**
+     * Busca dados do time visitante
+     */
+    public function getFora(int $timeId): array
     {
-        $dto = new TimeDTO(
-            nome: 'West Ham United',
-            posicao_tabela: 18,
-            forma_recente: ['D', 'V', 'V', 'E', 'D'],
-            ultimos_jogos: ['E (2-2)', 'D (2-1)'],
-            stats_season: new EstatisticasTimeDTO(
-                13, 3, 2, 8,
-                15, 27,
-                1.15, 2.07,
-                5.5,
-                12.4,
-                10.2,
-                2.4,
-                43.2
-            ),
-            noticias_e_desfalques: [
-                new DesfalqueDTO(
-                    noticia_ou_desfalque: 'desfalque',
-                    atleta: 'Lucas Paquetá',
-                    posicao: 'Meio campista',
-                    motivo: 'Suspensão',
-                    Partidas: 12,
-                    partidas_titular: 12,
-                    total_minutos_jogados: 1044,
-                    nota_media: 7.08,
-                    gols_sofridos_por_jogo: null,
-                    gols: 3,
-                    gols_esperados: 1.85,
-                    assistencias: 0,
-                    cartoes_amarelo: 5,
-                    cartoes_vermelho: 1,
-                    jogos_sem_sofrer_gol: null
-                )
-            ],
-            fator_motivacional: 'Luta contra o rebaixamento'
+        return $this->buildTime($timeId, 'fora');
+    }
+
+    /**
+     * Monta DTO do time a partir da API
+     */
+    private function buildTime(int $timeId, string $tipo): array
+    {
+        $timeNome = '';
+        if($tipo === 'casa') {
+            $timeNome = $this->timeCasaNome;
+        } else {
+            $timeNome = $this->timeForaNome;
+        }
+
+
+        $statsData = $this->request('/teams/statistics', [
+            'team' => $timeId,
+            'season' => $this->temporadaAno,
+            'league' => $this->ligaId
+            // 'last' => 5
+        ]);
+
+        $stats = $statsData['response'] ?? [];
+        
+        $estatisticas = new EstatisticasTimeDTO(
+            partidas: $stats['fixtures']['played']['total'] ?? 0,
+            vitorias: $stats['fixtures']['wins']['total'] ?? 0,
+            empates: $stats['fixtures']['draws']['total'] ?? 0,
+            derrotas: $stats['fixtures']['loses']['total'] ?? 0,
+            gols_pro: $stats['goals']['for']['total']['total'] ?? 0,
+            gols_sofridos: $stats['goals']['against']['total']['total'] ?? 0,
+            media_gols_pro: $stats['goals']['for']['average']['total'] ?? 0,
+            media_gols_sofridos: $stats['goals']['against']['average']['total'] ?? 0,
+            media_escanteios_favor: 0,
+            media_cruzamentos_pg: 0,
+            media_chutes_no_gol: 0,
+            media_cartoes_recebidos: $this->somarCartoes($stats['cards'], 'yellow') + $this->somarCartoes($stats['cards'], 'red'),
+            posse_bola_media: 0
         );
 
-        return $dto->toArrayFora();
+        
+        $lastFixtures = $this->request('/fixtures', [
+            'team' => $timeId,
+            'season' => $this->temporadaAno
+        ]);
+
+        $ultimosJogos = array_map(function($f) use ($timeId) {
+            $mandante = $f['teams']['home']['id'] === $timeId;
+            $placar = ($f['goals']['home'] ?? '?') . '-' . ($f['goals']['away'] ?? '?');
+            $resultado = $mandante
+                ? $this->getResultado($f['goals']['home'] ?? 0, $f['goals']['away'] ?? 0)
+                : $this->getResultado($f['goals']['away'] ?? 0, $f['goals']['home'] ?? 0);
+            return "{$resultado} ({$placar})";
+        }, $lastFixtures['response'] ?? []);
+
+        
+        $playersData = $this->request('/injuries', [
+            'team' => $timeId,
+            'season' => $this->temporadaAno,
+            'fixture' => $this->fixtureId
+        ]);
+
+        $desfalques = [];
+        foreach ($playersData['response'] ?? [] as $p) {
+            $desfalques[] = new DesfalqueDTO(
+                noticia_ou_desfalque: 'desfalque',
+                atleta: $p['player']['name'] ?? '', 
+                posicao: '',
+                motivo: $p['player']['reason'] ?? 'Desconhecido',
+                Partidas: 0,
+                partidas_titular: 0,
+                total_minutos_jogados: 0,
+                nota_media: floatval(0.0),
+                gols_sofridos_por_jogo: null,
+                gols: 0,
+                gols_esperados: 0.0,
+                assistencias: 0,
+                cartoes_amarelo: 0,
+                cartoes_vermelho: 0,
+                jogos_sem_sofrer_gol: null
+            );
+        }
+
+        $dto = new TimeDTO(
+            nome: $timeNome ?? 'Desconhecido',
+            posicao_tabela: 0,
+            forma_recente_geral: [], 
+            ultimos_jogos: $ultimosJogos,
+            stats_season: $estatisticas,
+            noticias_e_desfalques: $desfalques,
+            fator_motivacional: '' // definir como vai ficar
+        );
+
+        return $tipo === 'casa' ? $dto->toArrayCasa() : $dto->toArrayFora();
+    }
+
+
+    /**
+     * Calcula resultado do jogo para o time
+     */
+    private function getResultado(int $golsPro, int $golsContra): string
+    {
+        if ($golsPro > $golsContra) return 'V';
+        if ($golsPro < $golsContra) return 'D';
+        return 'E';
+    }
+
+    /** 
+     * Somar cartões
+     */
+    private function somarCartoes(array $cards, string $tipo): int
+    {
+        $total = 0;
+
+        foreach ($cards[$tipo] ?? [] as $intervalo) {
+            if (isset($intervalo['total'])) {
+                $total += (int) $intervalo['total'];
+            }
+        }
+
+        return $total;
     }
 }

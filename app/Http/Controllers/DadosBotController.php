@@ -22,23 +22,28 @@ class DadosBotController extends Controller
 
     /**
      * Endpoint principal do bot
-     * GET /api/dadosBot
+     * GET /api/dados-bot
      */
     public function index(): JsonResponse
     {
         
-        $fixtureId = 1386839;
+        $fixtureId = 1215846;
         $metadados = $this->metadadosService->get($fixtureId);
         $timeCasaId = $metadados->timeCasaId;
         $timeForaId = $metadados->timeForaId;
+        $this->timeService->ligaId = $metadados->ligaId;
+        $this->timeService->temporadaAno = 2024;
+        $this->timeService->timeCasaNome = $metadados->timeCasaNome;
+        $this->timeService->timeForaNome = $metadados->timeForaNome;
+        $this->timeService->fixtureId = $fixtureId;
 
         $response = [
             'metadados' => $metadados,
-            'odds_atuais' => $this->oddsService->get($fixtureId),
-            'arbitragem' => $this->arbitragemService->get($fixtureId),
-            'historico_h2h' => $this->historicoH2HService->get($timeCasaId, $timeForaId),
+            // 'odds_atuais' => $this->oddsService->get($fixtureId),
+            // 'arbitragem' => $this->arbitragemService->get($fixtureId),
+            // 'historico_h2h' => $this->historicoH2HService->get($timeCasaId, $timeForaId),
             'time_casa' => $this->timeService->getCasa($timeCasaId),
-            'time_fora' => $this->timeService->getFora($timeForaId),
+            // 'time_fora' => $this->timeService->getFora($timeForaId),
         ];
 
         return response()->json($response);

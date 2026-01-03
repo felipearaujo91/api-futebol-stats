@@ -21,7 +21,7 @@ class MetadadosService
         $fixture = $response['response'][0] ?? null;
 
         if (!$fixture) {
-            throw new \Exception('Fixture não encontrado');
+            throw new \Exception('Fixture ' . $fixtureId . ' não encontrado');
         }
 
         return new MetadadosDTO(
@@ -44,7 +44,10 @@ class MetadadosService
             importancia_jogo: null,
 
             timeCasaId: $fixture['teams']['home']['id'],
+            timeCasaNome: $fixture['teams']['home']['name'],
             timeForaId: $fixture['teams']['away']['id'],
+            timeForaNome: $fixture['teams']['away']['name'],
+            ligaId: $fixture['league']['id']
         );
     }
 }
