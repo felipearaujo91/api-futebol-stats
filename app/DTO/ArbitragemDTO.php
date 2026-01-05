@@ -11,4 +11,12 @@ class ArbitragemDTO
         public ?float $media_faltas_por_jogo,
         public ?string $caracteristica,
     ) {}
+
+    public function toArray(): array
+    {
+        return array_filter(
+            get_object_vars($this),
+            fn ($v) => $v !== null
+        );
+    }
 }

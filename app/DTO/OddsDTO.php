@@ -44,4 +44,9 @@ class OddsDTO
         public float $under_35_cartoes,
         public float $under_45_cartoes,
     ) {}
+
+    public function toArray(): array
+    {
+        return get_object_vars($this);
+    }
 }
