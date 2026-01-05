@@ -2,52 +2,34 @@
 
 namespace App\Services;
 
+use App\Contracts\MetadadosProviderInterface;
 use App\DTO\MetadadosDTO;
-use App\Services\ApiFootballClient;
 use Carbon\Carbon;
 
 class MetadadosService
 {
     public function __construct(
-        protected ApiFootballClient $apiFootball
+        private MetadadosProviderInterface $provider
     ) {}
 
     public function get(int $fixtureId): MetadadosDTO
     {
-        $response = $this->apiFootball->request('/fixtures', [
-            'id' => $fixtureId
-        ]);
-
-        $fixture = $response['response'][0] ?? null;
-
-        if (!$fixture) {
-            throw new \Exception('Fixture ' . $fixtureId . ' não encontrado');
-        }
+        $fixture = $this->provider->getFixtureById($fixtureId);
 
         return new MetadadosDTO(
-            jogo: $fixture['teams']['home']['name']
-                . ' vs '
-                . $fixture['teams']['away']['name'],
+            jogo: $fixture['jogo'],
+            campeonato: $fixture['campeonato'],
+            data_hora: Carbon::parse($fixture['data_hora'])->format('Y-m-d H:i:s'),
+            estadio: $fixture['estadio'],
+            timeCasaId: $fixture['timeCasaId'],
+            timeCasaNome: $fixture['timeCasaNome'],
+            timeForaId: $fixture['timeForaId'],
+            timeForaNome: $fixture['timeForaNome'],
+            ligaId: $fixture['ligaId'],
 
-            campeonato: $fixture['league']['name']
-                . ' - '
-                . $fixture['league']['round'],
-
-            data_hora: Carbon::parse($fixture['fixture']['date'])->format('Y-m-d H:i:s'),
-
-            estadio: $fixture['fixture']['venue']['name'] ?? null,
-
-            // clima não é garantido
-            clima_previsto: $fixture['fixture']['weather']['description'] ?? null,
-
-            // precisa definir como vai ficar
-            importancia_jogo: null,
-
-            timeCasaId: $fixture['teams']['home']['id'],
-            timeCasaNome: $fixture['teams']['home']['name'],
-            timeForaId: $fixture['teams']['away']['id'],
-            timeForaNome: $fixture['teams']['away']['name'],
-            ligaId: $fixture['league']['id']
+            // não disponível na API, ver como vai fazer
+            clima_previsto: null,
+            importancia_jogo: null
         );
     }
 }

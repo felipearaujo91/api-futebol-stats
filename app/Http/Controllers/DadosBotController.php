@@ -39,11 +39,11 @@ class DadosBotController extends Controller
 
         $response = [
             'metadados' => $metadados,
-            // 'odds_atuais' => $this->oddsService->get($fixtureId),
-            // 'arbitragem' => $this->arbitragemService->get($fixtureId),
-            // 'historico_h2h' => $this->historicoH2HService->get($timeCasaId, $timeForaId),
+            'odds_atuais' => $this->oddsService->get($fixtureId),
+            'arbitragem' => $this->arbitragemService->get($fixtureId),
+            'historico_h2h' => $this->historicoH2HService->get($timeCasaId, $timeForaId),
             'time_casa' => $this->timeService->getCasa($timeCasaId),
-            // 'time_fora' => $this->timeService->getFora($timeForaId),
+            'time_fora' => $this->timeService->getFora($timeForaId),
         ];
 
         return response()->json($response);
