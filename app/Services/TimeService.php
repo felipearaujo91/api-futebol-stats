@@ -65,7 +65,7 @@ class TimeService extends ApiFootballClient
             media_escanteios_favor: 0,
             media_cruzamentos_pg: 0,
             media_chutes_no_gol: 0,
-            media_cartoes_recebidos: $this->somarCartoes($stats['cards'], 'yellow') + $this->somarCartoes($stats['cards'], 'red'),
+            media_cartoes_recebidos: ($this->somarCartoes($stats['cards'], 'yellow') + $this->somarCartoes($stats['cards'], 'red')) / $stats['fixtures']['played']['total'],
             posse_bola_media: 0
         );
 
@@ -93,29 +93,48 @@ class TimeService extends ApiFootballClient
 
         $desfalques = [];
         foreach ($playersData['response'] ?? [] as $p) {
+            
+            $playerStats = $this->request('/players', [
+                'id' => $p['player']['id'],
+                'season' => $this->temporadaAno,
+                'league' => $this->ligaId
+            ]);
+
+            /** 
+             * gols_esperados = ?? -> não tem mas vale a pena calcular em cima disso aqui: xG ≈ (chutes_no_gol * 0.3) + (chutes_totais * 0.05) ?
+             * jogos_sem_sofrer_gol = ?? -> não tem informação direta, clean_sheet só tem para o TIME, vale a pena vazer diversas requisições e calculo pra ver? 
+             */
             $desfalques[] = new DesfalqueDTO(
                 noticia_ou_desfalque: 'desfalque',
                 atleta: $p['player']['name'] ?? '', 
-                posicao: '',
+                posicao: $playerStats['response'][0]['statistics'][0]['games']['position'] ?? 'Desconhecida',
                 motivo: $p['player']['reason'] ?? 'Desconhecido',
-                Partidas: 0,
-                partidas_titular: 0,
-                total_minutos_jogados: 0,
-                nota_media: floatval(0.0),
-                gols_sofridos_por_jogo: null,
-                gols: 0,
+                Partidas: $playerStats['response'][0]['statistics'][0]['games']['appearences'] ?? 0,
+                partidas_titular: $playerStats['response'][0]['statistics'][0]['games']['lineups'] ?? 0,
+                total_minutos_jogados: $playerStats['response'][0]['statistics'][0]['games']['minutes'] ?? 0,
+                nota_media: floatval($playerStats['response'][0]['statistics'][0]['games']['rating'] ?? 0),
+                gols_sofridos_por_jogo: $playerStats['response'][0]['statistics'][0]['games']['appearences'] ? ($playerStats['response'][0]['statistics'][0]['goals']['conceded'] / $playerStats['response'][0]['statistics'][0]['games']['appearences']) : null,
+                gols: $playerStats['response'][0]['statistics'][0]['goals']['total']['total'] ?? 0,
                 gols_esperados: 0.0,
-                assistencias: 0,
-                cartoes_amarelo: 0,
-                cartoes_vermelho: 0,
+                assistencias: $playerStats['response'][0]['statistics'][0]['goals']['assists'] ?? 0,
+                cartoes_amarelo: $playerStats['response'][0]['statistics'][0]['cards']['yellow'] ?? 0,
+                cartoes_vermelho: $playerStats['response'][0]['statistics'][0]['cards']['red'] ?? 0,
                 jogos_sem_sofrer_gol: null
             );
         }
 
+        $standings = $this->request('/standings', [
+            'league' => $this->ligaId,
+            'season' => $this->temporadaAno,
+            'team'   => $timeId
+        ]);
+
+        $formRecente = $statsData['response']['form'] ?? '';
+
         $dto = new TimeDTO(
             nome: $timeNome ?? 'Desconhecido',
-            posicao_tabela: 0,
-            forma_recente_geral: [], 
+            posicao_tabela: $standings['response'][0]['league']['standings'][0][0]['rank'],
+            forma_recente_geral: $this->formatarForma($formRecente), 
             ultimos_jogos: $ultimosJogos,
             stats_season: $estatisticas,
             noticias_e_desfalques: $desfalques,
@@ -151,4 +170,25 @@ class TimeService extends ApiFootballClient
 
         return $total;
     }
+
+    /**
+     * Formatar Forma que vem como "WDLDWLDLDWLWDDWWDLWWLWLLDWWDWDWWWWDWDW"
+     */
+    private function formatarForma(string $form, int $limite = 5): array
+    {
+        $map = [
+            'W' => 'V', 
+            'D' => 'E', 
+            'L' => 'D', 
+        ];
+
+        return collect(str_split($form))
+            ->reverse()               // começa pelos jogos mais recentes
+            ->take($limite)           // pega os últimos N
+            ->map(fn ($f) => $map[$f] ?? null)
+            ->filter()                // remove nulls
+            ->values()
+            ->toArray();
+    }
+
 }
